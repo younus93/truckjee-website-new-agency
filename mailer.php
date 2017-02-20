@@ -22,7 +22,7 @@ if(empty($name) OR empty($email) OR empty($phone) OR empty($type))
 # Make the call to the client.
 $result = $mgClient->sendMessage($domain, array(
     'from'    => 'Website Enquiry <mailgun@sandbox3f48735962434013b701248fce6217da.mailgun.org>',
-    'to'      => 'Younus <info@truckjee.com>',
+    'to'      => 'Younus <itsme@theyounus.com>',
     'subject' => 'New Website Enquiry',
     'text'    => "$name - $email - $phone - $type - ".date('d/m/Y')
 ));
