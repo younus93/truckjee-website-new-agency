@@ -1,57 +1,41 @@
 <?php
 
-    // Only process POST reqeusts.
-    if ($_SERVER["REQUEST_METHOD"] == "POST") {
-        // Get the form fields and remove whitespace.
-        $name = strip_tags(trim($_POST["name"]));
+# Include the Autoloader (see "Libraries" for install instructions)
+require 'vendor/autoload.php';
+use Mailgun\Mailgun;
+
+# Instantiate the client.
+$mgClient = new Mailgun('key-4959e8d40b417c1997416d044bceb271');
+$domain = "sandbox3f48735962434013b701248fce6217da.mailgun.org";
+
+$name = strip_tags(trim($_POST["name"]));
 				$name = str_replace(array("\r","\n"),array(" "," "),$name);
         $email = filter_var(trim($_POST["email"]), FILTER_SANITIZE_EMAIL);
         $phone = strip_tags(trim($_POST["phone"]));
         $type = strip_tags(trim($_POST['type']));
+if(empty($name) OR empty($email) OR empty($phone) OR empty($type))
+{
+	http_response_code(403);
+	echo "Unable to process. Please enter all required details";
+	exit;
+}
+# Make the call to the client.
+$result = $mgClient->sendMessage($domain, array(
+    'from'    => 'Website Enquiry <mailgun@sandbox3f48735962434013b701248fce6217da.mailgun.org>',
+    'to'      => 'Younus <info@truckjee.com>',
+    'subject' => 'New Website Enquiry',
+    'text'    => "$name - $email - $phone - $type - ".date('d/m/Y')
+));
+$txt = "$name - $phone - $email - $type - ".date('d/m/Y');
+$myfile = file_put_contents('logs.txt', $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
 
-        // Check that data was sent to the mailer.
-        if ( empty($name) OR empty($phone) OR empty($type) OR !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            // Set a 400 (bad request) response code and exit.
-            http_response_code(400);
-            echo "Oops! There was a problem with your submission. Please complete the form and try again.";
-            exit;
-        }
+if($result){
+http_response_code(200);
+ echo "Thank you. We will get back to you shortly";
 
-        // Set the recipient email address.
-        // FIXME: Update this to your desired email address.
-        $recipient = "itsme@theyounus.com";
+}
+else{
+ http_response_code(500);
+ echo "Unable to connect to our servers. Write to us at info@truckjee.com";
+}
 
-
-        // Set the email subject.
-        $subject = "New contact from $name";
-
-        // Build the email content.
-        $email_content = "Name: $name\n";
-        $email_content .= "Phone: $phone\n\n";
-        $email_content .= "Phone: $email\n\n";
-        $email_content .= "Type : $type\n\n";
-
-        // Build the email headers.
-        $email_headers = "From: $name <$email>";
-
-        // Send the email.
-        if (mail($recipient, $subject, $email_content, $email_headers)) {
-            // Set a 200 (okay) response code.
-            http_response_code(200);
-            echo "Thank You! We will get in touch with you shortly.";
-        } else {
-            // Set a 500 (internal server error) response code.
-            http_response_code(500);
-            echo "Oops! Something went wrong and we couldn't send your message.";
-        }
-
-    } else {
-        // Not a POST request, set a 403 (forbidden) response code.
-        http_response_code(403);
-        echo "There was a problem with your submission, please try again.";
-    }
-    $txt = "$name - $phone - $email - $type - ".date('d/m/Y');
-     $myfile = file_put_contents('logs.txt', $txt.PHP_EOL , FILE_APPEND | LOCK_EX);
-
-
-?>
